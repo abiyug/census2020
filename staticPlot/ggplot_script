@@ -1,0 +1,28 @@
+#load the lib
+library(geojsonio)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(gridExtra)
+
+# read files
+df_hisp <- readr::read_csv("data/dc_blockgroups_hispanic.csv")
+dc_geo <- geojson_read("data/tl_2019_11_bg.geojson", what = "sp") 
+
+# merge the files
+df_geo <- fortify(dc_geo)
+df_hisp$group <- unique(df_geo$group)
+df_dc_hisp <- df_geo %>% left_join(df_hisp) 
+
+# plot static files
+gg_ACS_13_17 <- ggplot(df_dc_hisp, aes(long, lat)) + 
+                   geom_polygon(aes(group = group, fill = pct_Hispanic_ACS_13_17), linetype = "solid", color = "gray56") + 
+                   labs(title = "pct_Hispanic_ACS_13_17") +
+                   theme(legend.position = "bottom")
+gg_CEN_2010 <- ggplot(df_dc_hisp, aes(long, lat)) + 
+                  geom_polygon(aes(group = group, fill = pct_Hispanic_CEN_2010), linetype = "solid", color = "gray56") + 
+                  labs(title = "pct_Hispanic_CEN_2010") +
+                   theme(legend.position = "bottom")
+
+# Side by side plot
+grid.arrange(gg_CEN_2010, gg_ACS_13_17, nrow = 1)
